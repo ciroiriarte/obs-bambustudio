@@ -2,12 +2,11 @@
 #
 # OBS cannot watch GitHub releases, and the dependency Source list has to be
 # recomputed from upstream's deps/ superbuild on every release, so the bump runs
-# here: tools/bump.py detects a newer stable release, regenerates the deps
-# sources, pins the wxWidgets fork and bumps both recipes. This job pushes the
-# result to main and fires the runservice token for both OBS packages; OBS
-# re-runs each _service (obs_scm pulls the recipe, download_files fetches the
-# upstream tarballs) and rebuilds. bambustudio waits for bambustudio-deps
-# (BuildRequires: bambustudio-deps = %{version}).
+# here: tools/bump.py detects a newer stable release, regenerates the bundled
+# dependency sources, pins the wxWidgets fork and bumps the recipe. This job
+# pushes the result to main and fires the runservice token; OBS re-runs
+# _service (obs_scm pulls the recipe, download_files fetches the upstream
+# tarballs) and rebuilds.
 #
 # Required setting (repo -> Settings -> Secrets and variables -> Actions):
 #   secret OBS_SERVICE_TOKEN  runservice token for home:ciriarte:bambustudio
@@ -70,13 +69,11 @@ jobs:
           git commit -m "Update to upstream ${ver}"
           git push
 
-      - name: Trigger OBS source services
+      - name: Trigger OBS source service
         if: steps.check.outputs.bump == '1' || inputs.runservice
         env:
           OBS_SERVICE_TOKEN: ${{ secrets.OBS_SERVICE_TOKEN }}
         run: |
-          for pkg in bambustudio-deps bambustudio; do
-            curl -fsS --retry 3 --retry-all-errors -X POST \
-              -H "Authorization: Token ${OBS_SERVICE_TOKEN}" \
-              "https://api.opensuse.org/trigger/runservice?project=home:ciriarte:bambustudio&package=${pkg}"
-          done
+          curl -fsS --retry 3 --retry-all-errors -X POST \
+            -H "Authorization: Token ${OBS_SERVICE_TOKEN}" \
+            "https://api.opensuse.org/trigger/runservice?project=home:ciriarte:bambustudio&package=bambustudio"

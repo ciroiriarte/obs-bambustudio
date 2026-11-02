@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Track upstream BambuStudio stable releases and bump both recipes.
+"""Track upstream BambuStudio stable releases and bump the recipe.
 
 Detects the newest *stable* GitHub release of bambulab/BambuStudio (pre-release
 "Public Beta" builds are skipped). If it is newer than the packaged version:
 
   1. fetches the release tarball and extracts deps/ + cmake/ only,
-  2. regenerates the dependency Source list (tools/gen_deps.py),
+  2. regenerates the bundled-dependency Source list (tools/gen_deps.py),
   3. pins the bambulab/wxWidgets fork to the last master commit at or before
      the release date (upstream consumes "GIT_TAG master", unpinned),
-  4. updates Version / upstream_ver / wx_commit in both specs and prepends a
-     .changes entry to each.
+  4. updates Version / upstream_ver / wx_commit in the spec and prepends a
+     .changes entry.
 
 Usage: tools/bump.py [--dry-run] [--version 02.08.02.61]
   --dry-run   print "would bump A -> B" (or "up to date") and change nothing
@@ -28,7 +28,7 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PKGS = ROOT / "packages"
-SPECS = {p: PKGS / p / f"{p}.spec" for p in ("bambustudio-deps", "bambustudio")}
+SPEC = PKGS / "bambustudio" / "bambustudio.spec"
 UPSTREAM = "bambulab/BambuStudio"
 WX_FORK = "bambulab/wxWidgets"
 PACKAGER = "Ciro Iriarte <ciro.iriarte+software@gmail.com>"
@@ -54,7 +54,7 @@ def key(upstream_ver):
 
 
 def current_upstream_ver():
-    m = re.search(r"^%global\s+upstream_ver\s+(\S+)", SPECS["bambustudio"].read_text(), re.M)
+    m = re.search(r"^%global\s+upstream_ver\s+(\S+)", SPEC.read_text(), re.M)
     return m.group(1)
 
 
@@ -127,17 +127,14 @@ def main():
 
     wx = wx_commit_at(rel["published_at"])
     version = rpm_version(new)
-    for pkg, spec in SPECS.items():
-        text = set_version(set_global(spec.read_text(), "upstream_ver", new), version)
-        if pkg == "bambustudio-deps":
-            text = set_global(text, "wx_commit", wx)
-        spec.write_text(text)
+    text = set_version(set_global(SPEC.read_text(), "upstream_ver", new), version)
+    SPEC.write_text(set_global(text, "wx_commit", wx))
 
     notes = f"https://github.com/{UPSTREAM}/releases/tag/v{new}"
-    prepend_changes("bambustudio", [f"- Update to {version} (upstream v{new})", f"  * Release notes: {notes}"])
-    prepend_changes("bambustudio-deps", [f"- Update to {version} (upstream v{new})",
-                                         f"  * Regenerate dependency sources from upstream deps/",
-                                         f"  * Pin {WX_FORK} at {wx[:12]}"])
+    prepend_changes("bambustudio", [f"- Update to {version} (upstream v{new})",
+                                    f"  * Release notes: {notes}",
+                                    "  * Regenerate bundled dependency sources from upstream deps/",
+                                    f"  * Pin {WX_FORK} at {wx[:12]}"])
     print(f"bumped {cur} -> {new} (wxWidgets {wx[:12]})")
 
 

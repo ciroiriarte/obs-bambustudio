@@ -1,4 +1,8 @@
 -------------------------------------------------------------------
-Mon Nov  2 14:25:27 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+Mon Nov  2 14:54:58 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Initial package of Bambu Studio 2.8.2.61 (upstream tag v02.08.02.61)
+  * Distribution libraries wherever compatible; only the bambulab
+    wxWidgets fork, Boost, TBB, OCCT, CGAL, OpenVDB (+Blosc, OpenEXR)
+    and libnoise are built from upstream's deps/ superbuild and linked
+    statically, never installed
