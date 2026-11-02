@@ -25,7 +25,13 @@
 # which upstream tarballs become Source lines, so edit them only here and
 # re-run the generator. DEP_BUILD_*=OFF / *_FOUND=ON select the system library.
 %global deps_cmake_flags -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DDEP_WX_GTK3=ON -DDEP_BUILD_PNG=OFF -DDEP_BUILD_JPEG=OFF -DDEP_BUILD_TIFF=OFF -DDEP_BUILD_OPENSSL=OFF -DDEP_BUILD_GLFW=OFF -DDEP_BUILD_FREETYPE=OFF -DDEP_BUILD_GMP=OFF -DDEP_BUILD_MPFR=OFF -DDEP_BUILD_FFMPEG=OFF -DDEP_BUILD_LIBHARU=OFF -DEXPAT_FOUND=ON -DCURL_FOUND=ON
-%global deps_targets   dep_wxWidgets dep_Boost dep_TBB dep_OCCT dep_CGAL dep_OpenVDB dep_libnoise
+%global deps_targets   dep_wxWidgets dep_Boost dep_TBB dep_OCCT dep_CGAL dep_OpenVDB dep_libnoise dep_OpenMeshCraft
+# device_page web frontend (src/slic3r/GUI/DeviceWeb): built with the distro
+# Node.js, pnpm from its npm tarball, and the npm packages from a vendored pnpm
+# store (GitHub release asset of the packaging repo). tools/vendor_web.py sets
+# both values from upstream's PNPM_VERSION and pnpm-lock.yaml.
+%global pnpm_version   10.12.1
+%global web_store      b6f4988b0e50
 # LTO over the large static link needs far more memory than OBS workers have.
 %global _lto_cflags    %{nil}
 
@@ -36,13 +42,16 @@ Summary:        Slicer for Bambu Lab and other FDM 3D printers
 # Bundled, statically linked: wxWidgets fork (wxWindows), Boost (BSL-1.0),
 # oneTBB (Apache-2.0), OCCT (LGPL-2.1-only WITH OCCT-exception-1.0),
 # CGAL (GPL-3.0-or-later / LGPL-3.0-or-later), OpenVDB (MPL-2.0),
-# Blosc (BSD-3-Clause), OpenEXR (BSD-3-Clause), libnoise (LGPL-2.1-or-later).
-License:        AGPL-3.0-only AND BSL-1.0 AND Apache-2.0 AND GPL-3.0-or-later AND LGPL-3.0-or-later AND LGPL-2.1-or-later AND MPL-2.0 AND BSD-3-Clause
+# Blosc (BSD-3-Clause), OpenEXR (BSD-3-Clause), libnoise (LGPL-2.1-or-later),
+# OpenMeshCraft (GPL-3.0-only).
+License:        AGPL-3.0-only AND GPL-3.0-only AND BSL-1.0 AND Apache-2.0 AND GPL-3.0-or-later AND LGPL-3.0-or-later AND LGPL-2.1-or-later AND MPL-2.0 AND BSD-3-Clause
 Group:          Productivity/Graphics/CAD
 URL:            https://github.com/bambulab/BambuStudio
 Source0:        https://github.com/bambulab/BambuStudio/archive/refs/tags/v%{upstream_ver}.tar.gz#/BambuStudio-%{upstream_ver}.tar.gz
 Source1:        https://github.com/bambulab/wxWidgets/archive/%{wx_commit}.tar.gz#/wxWidgets-%{wx_commit}.tar.gz
 Source2:        %{name}-rpmlintrc
+Source3:        https://registry.npmjs.org/pnpm/-/pnpm-%{pnpm_version}.tgz
+Source4:        https://github.com/ciroiriarte/obs-bambustudio/releases/download/web-store-%{web_store}/device-page-store-%{web_store}.tar.zst
 # BEGIN generated deps sources (tools/gen_deps.py)
 # sha256 dcb48bf43a672fa3de6a4b1de2c4c238709dad5893d1e097b8374ad84b1fc3b3
 Source100:      https://github.com/tamasmeszaros/c-blosc/archive/refs/heads/v1.17.0_tm.zip#/dep__Blosc__v1.17.0_tm.zip
@@ -54,12 +63,14 @@ Source102:      https://github.com/CGAL/cgal/archive/refs/tags/v5.4.zip#/dep__CG
 Source103:      https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_0.zip#/dep__OCCT__V7_6_0.zip
 # sha256 0307a3d7e1fa1e77e9d84d7e9a8694583fbbbfd50bdc6884e2c96b8ef6b902de
 Source104:      https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v2.5.5.zip#/dep__OpenEXR__v2.5.5.zip
+# sha256 632cd806ce932d6a1d76df0e86ecf8bfc22480e76f80a638a28474f5262e2b9e
+Source105:      https://github.com/bambulab/OpenMeshCraft/archive/0e8d12c3df54804393593ab5d86c05caa340cbee.zip#/dep__OpenMeshCraft__0e8d12c3df54804393593ab5d86c05caa340cbee.zip
 # sha256 f353e7b99bd0cbfc27ac9082de51acf32a8bc0b3e21ff9661ecca6f205ec1d81
-Source105:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip#/dep__OpenVDB__a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip
+Source106:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip#/dep__OpenVDB__a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip
 # sha256 83ea786c964a384dd72534f9854b419716f412f9d43c0be88d41874763e7bb47
-Source106:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
+Source107:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
 # sha256 7aae3433e4c841a1b15ddf40dc995b3d32efb154b92b6796888002e275bff859
-Source107:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
+Source108:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
 # END generated deps sources
 BuildRequires:  binutils
 BuildRequires:  cmake >= 3.13
@@ -68,8 +79,10 @@ BuildRequires:  gcc-c++
 BuildRequires:  gettext
 BuildRequires:  git-core
 BuildRequires:  ninja
+BuildRequires:  nodejs >= 22
 BuildRequires:  pkgconfig
 BuildRequires:  unzip
+BuildRequires:  zstd
 # --- used by the bundled superbuild and the app ---
 BuildRequires:  pkgconfig(bzip2)
 BuildRequires:  pkgconfig(dbus-1)
@@ -158,6 +171,28 @@ for f in %{_sourcedir}/dep__*__*; do
     cp -p "$f" "deps-dl/$d/${n#*__}"
 done
 
+# device_page web frontend, offline. Upstream's CMake looks for node and pnpm
+# in ../node-cache/node-v<NODE_VERSION>-linux-<arch>/bin and downloads them if
+# missing; seed that directory with the distro node and an offline pnpm.
+node_ver=$(sed -n 's/.*set(NODE_VERSION "\([^"]*\)").*/\1/p' src/slic3r/GUI/DeviceWeb/CMakeLists.txt)
+test -n "$node_ver"
+case "%{_arch}" in aarch64) node_arch=arm64 ;; *) node_arch=x64 ;; esac
+nodecache=$(dirname "$PWD")/node-cache
+bindir=$nodecache/node-v$node_ver-linux-$node_arch/bin
+mkdir -p "$bindir" "$nodecache/pnpm"
+tar -C "$nodecache/pnpm" --strip-components=1 -xzf %{SOURCE3}
+tar -C "$nodecache" --zstd -xf %{SOURCE4}
+ln -s "$(command -v node)" "$bindir/node"
+cat > "$bindir/pnpm" <<EOF
+#!/bin/sh
+# Offline pnpm for the package build: installs only from the vendored store.
+if [ "\$1" = install ]; then
+    exec node "$nodecache/pnpm/bin/pnpm.cjs" install --offline --frozen-lockfile --store-dir "$nodecache/pnpm-store"
+fi
+exec node "$nodecache/pnpm/bin/pnpm.cjs" "\$@"
+EOF
+chmod +x "$bindir/pnpm"
+
 %build
 %if 0%{?suse_version}
 # Large OCCT/libslic3r/GUI translation units need ~2.5 GB each.
@@ -184,6 +219,8 @@ unset CMAKE_BUILD_PARALLEL_LEVEL
 export CFLAGS="$(echo "%{optflags}" | sed 's/ -g / -g1 /; s/ -g$/ -g1/')"
 export CXXFLAGS="$CFLAGS"
 export LDFLAGS="-Wl,--exclude-libs,ALL"
+# pnpm/vite: non-interactive, no update checks (no network)
+export CI=1 npm_config_update_notifier=false
 cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \

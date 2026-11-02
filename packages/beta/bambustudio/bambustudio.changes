@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Nov  2 16:52:25 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Build the device_page web frontend offline: distro Node.js, pnpm
+  from its npm tarball and a vendored pnpm store (no network on OBS)
+- Bundle OpenMeshCraft (new upstream mesh-boolean dependency)
+
+-------------------------------------------------------------------
 Mon Nov  2 15:07:30 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Update to 2.8.4.57 (upstream v02.08.04.57, Public Beta)

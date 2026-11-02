@@ -122,6 +122,27 @@ at build time. So:
 Guardrail: `gen_deps.py` aborts if a bundled dependency becomes git-cloned or
 loses its SHA256, so a bump cannot silently produce a recipe that needs network.
 
+### Device page web frontend (Node.js)
+
+Bambu Studio includes a TypeScript/Vite web UI
+(`src/slic3r/GUI/DeviceWeb/device_page`) that upstream builds during the CMake
+build by downloading Node.js and pnpm and running `pnpm install` against npm.
+Offline on OBS instead:
+
+- **Node.js** is the distribution's (`BuildRequires: nodejs >= 22`).
+- **pnpm** is its npm tarball (plain JavaScript) at upstream's `PNPM_VERSION`,
+  run by the distro `node` (`%pnpm_version`, Source3).
+- **npm packages** come from a pnpm store that `tools/vendor_web.py` builds with
+  `pnpm fetch` against upstream's `pnpm-lock.yaml` and publishes as a release
+  asset of this repo (`web-store-<id>`, Source4). `<id>` is the first 12 hex
+  digits of the lockfile's SHA256, so channels/versions with the same lockfile
+  share one asset. It includes native optional packages for linux x64 and arm64.
+
+`%prep` seeds the `node-cache` directory upstream's CMake checks with the distro
+`node` and an offline `pnpm` wrapper (`install --offline --frozen-lockfile`
+from the vendored store), so nothing is downloaded and the frontend is still
+built from source on OBS.
+
 ### Unbundling a library
 
 When a distribution ships a compatible version of a bundled library, switch it
@@ -144,6 +165,7 @@ project/
   <channel>/bambustudio.meta.xml   # package meta
 tools/
   gen_deps.py                # regenerate the bundled Source list from an upstream tree
+  vendor_web.py              # build + publish the device_page npm store, set %web_store
   bump.py                    # upstream release tracker per channel (run daily by CI)
 .github/workflows/upstream-bump.yml
 ```
@@ -181,7 +203,8 @@ osc service remoterun home:ciriarte:bambustudio:stable bambustudio   # and/or :b
 Automatic: `.github/workflows/upstream-bump.yml` runs daily and processes both
 channels in turn. When a channel's pick (see *Channels*) is newer than its
 packaged version it runs `tools/bump.py --channel <ch>` (regenerate bundled
-sources → pin wxWidgets → bump spec and `.changes`), pushes to `main` and fires
+sources → publish the npm store if the lockfile changed → pin wxWidgets →
+bump spec and `.changes`), pushes to `main` and fires
 the OBS runservice token for that channel.
 
 Manual: `tools/bump.py --channel stable|beta [--version 02.08.02.61]`, review,

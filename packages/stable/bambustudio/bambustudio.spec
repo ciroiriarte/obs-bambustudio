@@ -26,6 +26,12 @@
 # re-run the generator. DEP_BUILD_*=OFF / *_FOUND=ON select the system library.
 %global deps_cmake_flags -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DDEP_WX_GTK3=ON -DDEP_BUILD_PNG=OFF -DDEP_BUILD_JPEG=OFF -DDEP_BUILD_TIFF=OFF -DDEP_BUILD_OPENSSL=OFF -DDEP_BUILD_GLFW=OFF -DDEP_BUILD_FREETYPE=OFF -DDEP_BUILD_GMP=OFF -DDEP_BUILD_MPFR=OFF -DDEP_BUILD_FFMPEG=OFF -DDEP_BUILD_LIBHARU=OFF -DEXPAT_FOUND=ON -DCURL_FOUND=ON
 %global deps_targets   dep_wxWidgets dep_Boost dep_TBB dep_OCCT dep_CGAL dep_OpenVDB dep_libnoise
+# device_page web frontend (src/slic3r/GUI/DeviceWeb): built with the distro
+# Node.js, pnpm from its npm tarball, and the npm packages from a vendored pnpm
+# store (GitHub release asset of the packaging repo). tools/vendor_web.py sets
+# both values from upstream's PNPM_VERSION and pnpm-lock.yaml.
+%global pnpm_version   10.12.1
+%global web_store      9c72e1a6c919
 # LTO over the large static link needs far more memory than OBS workers have.
 %global _lto_cflags    %{nil}
 
@@ -43,6 +49,8 @@ URL:            https://github.com/bambulab/BambuStudio
 Source0:        https://github.com/bambulab/BambuStudio/archive/refs/tags/v%{upstream_ver}.tar.gz#/BambuStudio-%{upstream_ver}.tar.gz
 Source1:        https://github.com/bambulab/wxWidgets/archive/%{wx_commit}.tar.gz#/wxWidgets-%{wx_commit}.tar.gz
 Source2:        %{name}-rpmlintrc
+Source3:        https://registry.npmjs.org/pnpm/-/pnpm-%{pnpm_version}.tgz
+Source4:        https://github.com/ciroiriarte/obs-bambustudio/releases/download/web-store-%{web_store}/device-page-store-%{web_store}.tar.zst
 # BEGIN generated deps sources (tools/gen_deps.py)
 # sha256 dcb48bf43a672fa3de6a4b1de2c4c238709dad5893d1e097b8374ad84b1fc3b3
 Source100:      https://github.com/tamasmeszaros/c-blosc/archive/refs/heads/v1.17.0_tm.zip#/dep__Blosc__v1.17.0_tm.zip
@@ -68,8 +76,10 @@ BuildRequires:  gcc-c++
 BuildRequires:  gettext
 BuildRequires:  git-core
 BuildRequires:  ninja
+BuildRequires:  nodejs >= 22
 BuildRequires:  pkgconfig
 BuildRequires:  unzip
+BuildRequires:  zstd
 # --- used by the bundled superbuild and the app ---
 BuildRequires:  pkgconfig(bzip2)
 BuildRequires:  pkgconfig(dbus-1)
@@ -158,6 +168,28 @@ for f in %{_sourcedir}/dep__*__*; do
     cp -p "$f" "deps-dl/$d/${n#*__}"
 done
 
+# device_page web frontend, offline. Upstream's CMake looks for node and pnpm
+# in ../node-cache/node-v<NODE_VERSION>-linux-<arch>/bin and downloads them if
+# missing; seed that directory with the distro node and an offline pnpm.
+node_ver=$(sed -n 's/.*set(NODE_VERSION "\([^"]*\)").*/\1/p' src/slic3r/GUI/DeviceWeb/CMakeLists.txt)
+test -n "$node_ver"
+case "%{_arch}" in aarch64) node_arch=arm64 ;; *) node_arch=x64 ;; esac
+nodecache=$(dirname "$PWD")/node-cache
+bindir=$nodecache/node-v$node_ver-linux-$node_arch/bin
+mkdir -p "$bindir" "$nodecache/pnpm"
+tar -C "$nodecache/pnpm" --strip-components=1 -xzf %{SOURCE3}
+tar -C "$nodecache" --zstd -xf %{SOURCE4}
+ln -s "$(command -v node)" "$bindir/node"
+cat > "$bindir/pnpm" <<EOF
+#!/bin/sh
+# Offline pnpm for the package build: installs only from the vendored store.
+if [ "\$1" = install ]; then
+    exec node "$nodecache/pnpm/bin/pnpm.cjs" install --offline --frozen-lockfile --store-dir "$nodecache/pnpm-store"
+fi
+exec node "$nodecache/pnpm/bin/pnpm.cjs" "\$@"
+EOF
+chmod +x "$bindir/pnpm"
+
 %build
 %if 0%{?suse_version}
 # Large OCCT/libslic3r/GUI translation units need ~2.5 GB each.
@@ -184,6 +216,8 @@ unset CMAKE_BUILD_PARALLEL_LEVEL
 export CFLAGS="$(echo "%{optflags}" | sed 's/ -g / -g1 /; s/ -g$/ -g1/')"
 export CXXFLAGS="$CFLAGS"
 export LDFLAGS="-Wl,--exclude-libs,ALL"
+# pnpm/vite: non-interactive, no update checks (no network)
+export CI=1 npm_config_update_notifier=false
 cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \

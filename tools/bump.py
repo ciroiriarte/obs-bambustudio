@@ -9,7 +9,9 @@ Channels (packages/<channel>/bambustudio, OBS home:ciriarte:bambustudio:<channel
 If the channel's pick is newer than its packaged version:
 
   1. fetches the release tarball and extracts deps/ + cmake/ only,
-  2. regenerates the bundled-dependency Source list (tools/gen_deps.py),
+  2. regenerates the bundled-dependency Source list (tools/gen_deps.py) and
+     publishes the device_page npm store if its lockfile changed
+     (tools/vendor_web.py),
   3. pins the bambulab/wxWidgets fork to the last master commit at or before
      the release date (upstream consumes "GIT_TAG master", unpinned),
   4. updates Version / upstream_ver / wx_commit in the spec and prepends a
@@ -91,7 +93,7 @@ def prepend_changes(path, lines):
 
 
 def fetch_source(upstream_ver):
-    """Download the release tarball and extract only what gen_deps needs."""
+    """Download the release tarball and extract only what the generators need."""
     CACHE.mkdir(exist_ok=True)
     tarball = CACHE / f"BambuStudio-{upstream_ver}.tar.gz"
     if not tarball.exists():
@@ -101,7 +103,8 @@ def fetch_source(upstream_ver):
     dest = CACHE / "src"
     with tarfile.open(tarball) as tf:
         members = [m for m in tf.getmembers()
-                   if m.name.startswith((f"{top}/deps/", f"{top}/cmake/"))]
+                   if m.name.startswith((f"{top}/deps/", f"{top}/cmake/",
+                                         f"{top}/src/slic3r/GUI/DeviceWeb/"))]
         tf.extractall(dest, members=members, filter="data")
     return dest / top
 
@@ -138,6 +141,9 @@ def main():
 
     src = fetch_source(new)
     subprocess.run([sys.executable, str(ROOT / "tools/gen_deps.py"), str(src), "--spec", str(spec)],
+                   check=True)
+    # Publishes the device_page npm store (if new) before the spec points at it.
+    subprocess.run([sys.executable, str(ROOT / "tools/vendor_web.py"), str(src), "--spec", str(spec)],
                    check=True)
 
     wx = wx_commit_at(rel["published_at"])

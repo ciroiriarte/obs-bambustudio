@@ -5,7 +5,8 @@
 # OBS cannot watch GitHub releases, and the bundled-dependency Source list has
 # to be recomputed from upstream's deps/ superbuild on every release, so the
 # bump runs here: tools/bump.py detects a newer release for the channel,
-# regenerates the bundled sources, pins the wxWidgets fork and bumps
+# regenerates the bundled sources, publishes the device_page npm store as a
+# release asset when its lockfile changed, pins the wxWidgets fork and bumps
 # packages/<channel>/bambustudio. This job pushes the result to main and fires
 # the runservice token for each bumped channel; OBS re-runs _service (obs_scm
 # pulls the recipe, download_files fetches the upstream tarballs) and rebuilds.
@@ -55,6 +56,7 @@ jobs:
         id: bump
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}   # vendor_web.py publishes npm stores via gh
           CHANNEL: ${{ inputs.channel || 'both' }}
           VERSION: ${{ inputs.version }}
           RUNSERVICE: ${{ inputs.runservice || false }}
