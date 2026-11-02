@@ -1,0 +1,15 @@
+<project name="home:ciriarte:bambustudio">
+  <title>Bambu Studio slicer (from source, unofficial)</title>
+  <description>Community/unofficial builds of Bambu Studio (AGPL-3.0), the 3D printing
+slicer by Bambu Lab, from upstream source. Not provided or endorsed by Bambu Lab.
+Source/automation: https://github.com/ciroiriarte/obs-bambustudio</description>
+  <person userid="ciriarte" role="maintainer"/>
+
+  <!-- Phase 1: openSUSE Slowroll only (x86_64; OBS publishes no other
+       Slowroll arch). Further targets (Tumbleweed, Leap 16.0, Rocky,
+       Ubuntu, Debian) get added here once Slowroll is green. -->
+  <repository name="openSUSE_Slowroll">
+    <path project="openSUSE:Slowroll" repository="standard"/>
+    <arch>x86_64</arch>
+  </repository>
+</project>

@@ -1,0 +1,82 @@
+# Track upstream BambuStudio stable releases and publish them to OBS.
+#
+# OBS cannot watch GitHub releases, and the dependency Source list has to be
+# recomputed from upstream's deps/ superbuild on every release, so the bump runs
+# here: tools/bump.py detects a newer stable release, regenerates the deps
+# sources, pins the wxWidgets fork and bumps both recipes. This job pushes the
+# result to main and fires the runservice token for both OBS packages; OBS
+# re-runs each _service (obs_scm pulls the recipe, download_files fetches the
+# upstream tarballs) and rebuilds. bambustudio waits for bambustudio-deps
+# (BuildRequires: bambustudio-deps = %{version}).
+#
+# Required setting (repo -> Settings -> Secrets and variables -> Actions):
+#   secret OBS_SERVICE_TOKEN  runservice token for home:ciriarte:bambustudio
+#                             (created without a package binding, see README)
+name: upstream bump
+
+on:
+  schedule:
+    - cron: "37 5 * * *"   # daily, 05:37 UTC
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Bump to this upstream version (e.g. 02.08.02.61) instead of the latest stable
+        required: false
+        type: string
+      runservice:
+        description: Re-run the OBS services even without a version bump (after a recipe change)
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upstream-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstream
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          out=$(python3 tools/bump.py --dry-run ${VERSION:+--version "$VERSION"})
+          echo "$out"
+          if grep -q '^would bump' <<<"$out"; then echo "bump=1" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Bump recipes
+        if: steps.check.outputs.bump == '1'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: python3 tools/bump.py ${VERSION:+--version "$VERSION"}
+
+      - name: Push recipes back to the repo
+        if: steps.check.outputs.bump == '1'
+        run: |
+          ver=$(sed -n 's/^Version:[[:space:]]*//p' packages/bambustudio/bambustudio.spec)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages
+          git commit -m "Update to upstream ${ver}"
+          git push
+
+      - name: Trigger OBS source services
+        if: steps.check.outputs.bump == '1' || inputs.runservice
+        env:
+          OBS_SERVICE_TOKEN: ${{ secrets.OBS_SERVICE_TOKEN }}
+        run: |
+          for pkg in bambustudio-deps bambustudio; do
+            curl -fsS --retry 3 --retry-all-errors -X POST \
+              -H "Authorization: Token ${OBS_SERVICE_TOKEN}" \
+              "https://api.opensuse.org/trigger/runservice?project=home:ciriarte:bambustudio&package=${pkg}"
+          done

@@ -1,0 +1,14 @@
+# OBS working copies
+.osc/
+home:ciriarte:bambustudio/
+
+# local upstream checkouts / downloads used by tools/
+.cache/
+dist/
+
+__pycache__/
+*.pyc
+
+# tooling/session state (not part of the project)
+.omc/
+.claude/

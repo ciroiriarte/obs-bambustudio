@@ -1,0 +1,12 @@
+<!-- Apply with:
+     osc meta pkg home:ciriarte:bambustudio bambustudio-deps -F project/bambustudio-deps.meta.xml
+     Build-only helper: built and usable as a BuildRequires inside the project,
+     but never published to the download repositories. -->
+<package name="bambustudio-deps" project="home:ciriarte:bambustudio">
+  <title>Static build dependencies for Bambu Studio (build-only)</title>
+  <description>Upstream's dependency superbuild built offline; consumed by the bambustudio package. Not published.</description>
+  <url>https://github.com/ciroiriarte/obs-bambustudio</url>
+  <publish>
+    <disable/>
+  </publish>
+</package>

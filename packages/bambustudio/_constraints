@@ -1,0 +1,12 @@
+<constraints>
+  <!-- Large C++ translation units and a single big static link of the
+       slicer against Boost/OCCT/OpenCV/CGAL/wxWidgets. -->
+  <hardware>
+    <disk>
+      <size unit="G">30</size>
+    </disk>
+    <physicalmemory>
+      <size unit="G">12</size>
+    </physicalmemory>
+  </hardware>
+</constraints>
