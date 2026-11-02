@@ -68,6 +68,8 @@ Source105:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f
 Source106:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
 # sha256 7aae3433e4c841a1b15ddf40dc995b3d32efb154b92b6796888002e275bff859
 Source107:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
+# URL@@file map for %prep: nested downloads are rewritten to file:// Sources
+%global nested_fetches %{nil}
 # END generated deps sources
 BuildRequires:  binutils
 BuildRequires:  cmake >= 3.13
@@ -110,6 +112,7 @@ BuildRequires:  pkgconfig(zlib)
 # --- system libraries replacing upstream's bundled copies ---
 BuildRequires:  cereal-devel
 BuildRequires:  gmp-devel
+BuildRequires:  libharu-devel
 BuildRequires:  mpfr-devel
 BuildRequires:  pkgconfig(assimp)
 BuildRequires:  pkgconfig(glew)
@@ -156,6 +159,18 @@ is downloaded by the application itself at runtime on user request.
 sed -i -e 's|GIT_REPOSITORY "https://github.com/bambulab/wxWidgets"|URL %{SOURCE1}|' \
        -e '/GIT_TAG master/d' deps/wxWidgets/wxWidgets.cmake
 grep -q 'URL %{SOURCE1}' deps/wxWidgets/wxWidgets.cmake
+
+# Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
+# Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
+# local Source via file://; upstream's SHA256 check still applies.
+for m in %{nested_fetches}; do
+    url=${m%%%%@@*}
+    grep -rlF "$url" deps | xargs -r sed -i "s|$url|file://%{_sourcedir}/${m#*@@}|"
+    if grep -rqF "$url" deps; then
+        echo "error: could not redirect $url" >&2
+        exit 1
+    fi
+done
 
 # Pre-seed ExternalProject's download directory. download_files stored each
 # bundled dependency as dep__<Dir>__<file>; ExternalProject expects it at

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Nov  2 19:54:09 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Link the system libharu (BuildRequires: libharu-devel)
+- Ship OpenMeshCraft's nested downloads (Eigen, parallel-hashmap,
+  oneTBB, fmt) as Sources and redirect them to file:// in %prep
+
+-------------------------------------------------------------------
 Mon Nov  2 16:52:25 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Build the device_page web frontend offline: distro Node.js, pnpm

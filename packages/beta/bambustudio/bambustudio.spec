@@ -71,6 +71,16 @@ Source106:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f
 Source107:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
 # sha256 7aae3433e4c841a1b15ddf40dc995b3d32efb154b92b6796888002e275bff859
 Source108:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
+# nested download in deps/OpenMeshCraft, sha256 41d12f1fc8e18606f39312681c6e1b957a4746ed97676c576e23e73554c6a662
+Source109:      https://gitlab.com/libeigen/eigen/-/archive/68f4e58cfacc686583d16cff90361f0b43bc2c1b/eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip#/nested__OpenMeshCraft__eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip
+# nested download in deps/OpenMeshCraft, sha256 29d0c510018d9bdaa5fbecaf95c2eaa616027d568e4a631d363b27620de4e07b
+Source110:      https://github.com/greg7mdp/parallel-hashmap/archive/154c63489e84d5569d3b466342a2ae8fd99e4734.zip#/nested__OpenMeshCraft__154c63489e84d5569d3b466342a2ae8fd99e4734.zip
+# nested download in deps/OpenMeshCraft, sha256 fe22388fb9435dcefa66c8189d4a8fbd8d968fda3a3dc4f578f78a3dd201c68e
+Source111:      https://github.com/oneapi-src/oneTBB/archive/d75ea937f7e480bd7775d7dab224e0b38451bb40.zip#/nested__OpenMeshCraft__d75ea937f7e480bd7775d7dab224e0b38451bb40.zip
+# nested download in deps/OpenMeshCraft, sha256 d368f9c39a33a3aef800f5be372ec1df1c12ad57ada1f60adc62f24c0e348469
+Source112:      https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip#/nested__OpenMeshCraft__10.2.1.zip
+# URL@@file map for %prep: nested downloads are rewritten to file:// Sources
+%global nested_fetches https://gitlab.com/libeigen/eigen/-/archive/68f4e58cfacc686583d16cff90361f0b43bc2c1b/eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip@@nested__OpenMeshCraft__eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip https://github.com/greg7mdp/parallel-hashmap/archive/154c63489e84d5569d3b466342a2ae8fd99e4734.zip@@nested__OpenMeshCraft__154c63489e84d5569d3b466342a2ae8fd99e4734.zip https://github.com/oneapi-src/oneTBB/archive/d75ea937f7e480bd7775d7dab224e0b38451bb40.zip@@nested__OpenMeshCraft__d75ea937f7e480bd7775d7dab224e0b38451bb40.zip https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip@@nested__OpenMeshCraft__10.2.1.zip
 # END generated deps sources
 BuildRequires:  binutils
 BuildRequires:  cmake >= 3.13
@@ -113,6 +123,7 @@ BuildRequires:  pkgconfig(zlib)
 # --- system libraries replacing upstream's bundled copies ---
 BuildRequires:  cereal-devel
 BuildRequires:  gmp-devel
+BuildRequires:  libharu-devel
 BuildRequires:  mpfr-devel
 BuildRequires:  pkgconfig(assimp)
 BuildRequires:  pkgconfig(glew)
@@ -159,6 +170,18 @@ is downloaded by the application itself at runtime on user request.
 sed -i -e 's|GIT_REPOSITORY "https://github.com/bambulab/wxWidgets"|URL %{SOURCE1}|' \
        -e '/GIT_TAG master/d' deps/wxWidgets/wxWidgets.cmake
 grep -q 'URL %{SOURCE1}' deps/wxWidgets/wxWidgets.cmake
+
+# Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
+# Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
+# local Source via file://; upstream's SHA256 check still applies.
+for m in %{nested_fetches}; do
+    url=${m%%%%@@*}
+    grep -rlF "$url" deps | xargs -r sed -i "s|$url|file://%{_sourcedir}/${m#*@@}|"
+    if grep -rqF "$url" deps; then
+        echo "error: could not redirect $url" >&2
+        exit 1
+    fi
+done
 
 # Pre-seed ExternalProject's download directory. download_files stored each
 # bundled dependency as dep__<Dir>__<file>; ExternalProject expects it at

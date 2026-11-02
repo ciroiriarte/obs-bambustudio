@@ -65,6 +65,32 @@ def parse_download_script(path, dl_dir):
     return rel.parts[0], rel.parts[1], url, sha.group(1).lower()
 
 
+def nested_downloads(deps_dir, needed):
+    """Downloads a bundled recipe performs itself, outside ExternalProject.
+
+    Example: deps/OpenMeshCraft generates a prepare_source.cmake that fetches
+    Eigen, parallel-hashmap, oneTBB and fmt with file(DOWNLOAD) at build time.
+    Every such call in upstream's recipes passes a quoted https URL followed
+    by a quoted SHA256; collect those so the spec can ship them as Sources.
+    Any other file(DOWNLOAD)/FetchContent in a needed recipe aborts.
+    """
+    found = []
+    for d in sorted(needed):
+        for f in sorted((deps_dir / d).glob("*.cmake")):
+            text = f.read_text()
+            pairs = re.findall(r'"(https://[^"\s]+)"\s*"([0-9A-Fa-f]{64})"', text)
+            calls = len(re.findall(r"^\s*\w+\(\s*$\s*\"https://", text, re.M))
+            raw = len(re.findall(r"file\(DOWNLOAD|FetchContent_Declare", text))
+            # omc-style helper: one file(DOWNLOAD) inside the helper function,
+            # invoked once per (url, sha) pair.
+            if raw and not pairs:
+                sys.exit(f"{f}: unhandled download mechanism (no url+sha256 pairs)")
+            if calls and calls != len(pairs):
+                sys.exit(f"{f}: {calls} nested download calls but {len(pairs)} with a SHA256")
+            found += [(d, url, sha.lower()) for url, sha in pairs]
+    return found
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("source", type=pathlib.Path, help="extracted upstream BambuStudio tree")
@@ -98,17 +124,31 @@ def main():
             parse_download_script(build / f"dep_{d}-prefix/src/dep_{d}-stamp/download-dep_{d}.cmake", dl_dir)
             for d in needed - GIT_DEPS)
 
+    nested = nested_downloads(args.source / "deps", needed)
+
     lines = [BEGIN]
-    for i, (d, f, url, sha) in enumerate(entries, FIRST_SOURCE):
+    i = FIRST_SOURCE
+    for d, f, url, sha in entries:
         lines.append(f"# sha256 {sha}")
         lines.append(f"Source{i}:      {url}#/dep__{d}__{f}")
+        i += 1
+    fetch_map = []
+    for d, url, sha in nested:
+        f = f"nested__{d}__{url.rsplit('/', 1)[1]}"
+        lines.append(f"# nested download in deps/{d}, sha256 {sha}")
+        lines.append(f"Source{i}:      {url}#/{f}")
+        fetch_map.append(f"{url}@@{f}")
+        i += 1
+    lines.append("# URL@@file map for %prep: nested downloads are rewritten to file:// Sources")
+    lines.append("%global nested_fetches " + (" ".join(fetch_map) or "%{nil}"))
     lines.append(END)
 
     pat = re.compile(re.escape(BEGIN) + r".*?" + re.escape(END), re.S)
     if not pat.search(spec_text):
         sys.exit("spec lacks the generated-sources markers")
     args.spec.write_text(pat.sub("\n".join(lines), spec_text))
-    print(f"{len(entries)} bundled dependency sources ({', '.join(sorted(needed))}) written to {args.spec}")
+    print(f"{len(entries)} bundled dependency sources ({', '.join(sorted(needed))}) "
+          f"+ {len(nested)} nested downloads written to {args.spec}")
 
 
 if __name__ == "__main__":

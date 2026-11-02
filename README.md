@@ -119,8 +119,16 @@ at build time. So:
    replaced by a tarball of a pinned commit (`%wx_commit`, the fork's `master`
    at the upstream release date).
 
-Guardrail: `gen_deps.py` aborts if a bundled dependency becomes git-cloned or
-loses its SHA256, so a bump cannot silently produce a recipe that needs network.
+5. Some bundled recipes download more at build time themselves (beta's
+   OpenMeshCraft fetches Eigen, parallel-hashmap, oneTBB and fmt from a
+   generated script). `gen_deps.py` collects those url + SHA256 pairs as
+   Sources too (`nested__<Dir>__<file>`), and `%prep` rewrites each URL to a
+   `file://` path to its Source (`%nested_fetches`); upstream's hash check
+   still applies.
+
+Guardrail: `gen_deps.py` aborts if a bundled dependency becomes git-cloned,
+loses its SHA256, or downloads through a mechanism it does not recognize, so a
+bump cannot silently produce a recipe that needs network.
 
 ### Device page web frontend (Node.js)
 
