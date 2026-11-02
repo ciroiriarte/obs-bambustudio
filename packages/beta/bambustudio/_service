@@ -1,0 +1,17 @@
+<!-- OBS source service for home:ciriarte:bambustudio:beta/bambustudio.
+     The recipe lives in GitHub (packages/beta/bambustudio); download_files then fetches
+     every Source URL in the spec (upstream tarballs). The upstream-bump
+     workflow pushes recipe changes and fires a runservice token to re-run
+     this. _constraints stays a plain committed file in OBS (the scheduler
+     reads it before services run). -->
+<services>
+  <service name="obs_scm">
+    <param name="scm">git</param>
+    <param name="url">https://github.com/ciroiriarte/obs-bambustudio.git</param>
+    <param name="revision">main</param>
+    <param name="extract">packages/beta/bambustudio/bambustudio.spec</param>
+    <param name="extract">packages/beta/bambustudio/bambustudio.changes</param>
+    <param name="extract">packages/beta/bambustudio/bambustudio-rpmlintrc</param>
+  </service>
+  <service name="download_files"/>
+</services>

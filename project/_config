@@ -1,5 +1,0 @@
-# Project build config for home:ciriarte:bambustudio
-# Apply with:  osc meta prjconf home:ciriarte:bambustudio -F project/_config
-#
-# Keep minimal; add per-distro Prefer:/Ignore: only for a real build-root
-# conflict (e.g. several FFmpeg majors providing the same pkgconfig()).

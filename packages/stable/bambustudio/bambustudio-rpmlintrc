@@ -1,0 +1,4 @@
+# Profiles, images and models upstream ships as data; many are identical copies
+# across vendors (fdupes already hardlinks them).
+addFilter("files-duplicate")
+addFilter("hidden-file-or-dir")

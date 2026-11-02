@@ -1,0 +1,7 @@
+<!-- Apply with:
+     osc meta pkg home:ciriarte:bambustudio:stable bambustudio -F project/stable/bambustudio.meta.xml -->
+<package name="bambustudio" project="home:ciriarte:bambustudio:stable">
+  <title>Bambu Studio slicer</title>
+  <description>Slicer for Bambu Lab and other FDM 3D printers, built from upstream source (unofficial).</description>
+  <url>https://github.com/bambulab/BambuStudio</url>
+</package>

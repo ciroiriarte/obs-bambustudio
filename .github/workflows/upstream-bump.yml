@@ -1,16 +1,19 @@
-# Track upstream BambuStudio stable releases and publish them to OBS.
+# Track upstream BambuStudio releases and publish them to OBS, per channel:
+#   stable -> home:ciriarte:bambustudio:stable  (newest non-pre-release)
+#   beta   -> home:ciriarte:bambustudio:beta    (newest release of any kind)
 #
-# OBS cannot watch GitHub releases, and the dependency Source list has to be
-# recomputed from upstream's deps/ superbuild on every release, so the bump runs
-# here: tools/bump.py detects a newer stable release, regenerates the bundled
-# dependency sources, pins the wxWidgets fork and bumps the recipe. This job
-# pushes the result to main and fires the runservice token; OBS re-runs
-# _service (obs_scm pulls the recipe, download_files fetches the upstream
-# tarballs) and rebuilds.
+# OBS cannot watch GitHub releases, and the bundled-dependency Source list has
+# to be recomputed from upstream's deps/ superbuild on every release, so the
+# bump runs here: tools/bump.py detects a newer release for the channel,
+# regenerates the bundled sources, pins the wxWidgets fork and bumps
+# packages/<channel>/bambustudio. This job pushes the result to main and fires
+# the runservice token for each bumped channel; OBS re-runs _service (obs_scm
+# pulls the recipe, download_files fetches the upstream tarballs) and rebuilds.
+# Channels run sequentially in one job so they never race on the push.
 #
 # Required setting (repo -> Settings -> Secrets and variables -> Actions):
-#   secret OBS_SERVICE_TOKEN  runservice token for home:ciriarte:bambustudio
-#                             (created without a package binding, see README)
+#   secret OBS_SERVICE_TOKEN  runservice token created without a package
+#                             binding (see README); valid for both channels
 name: upstream bump
 
 on:
@@ -18,12 +21,18 @@ on:
     - cron: "37 5 * * *"   # daily, 05:37 UTC
   workflow_dispatch:
     inputs:
+      channel:
+        description: Channel(s) to process
+        required: false
+        default: both
+        type: choice
+        options: [both, stable, beta]
       version:
-        description: Bump to this upstream version (e.g. 02.08.02.61) instead of the latest stable
+        description: Bump the selected channel to this upstream version (e.g. 02.08.02.61) instead of its latest (requires a single channel)
         required: false
         type: string
       runservice:
-        description: Re-run the OBS services even without a version bump (after a recipe change)
+        description: Re-run the OBS service of the selected channel(s) even without a version bump (after a recipe change)
         required: false
         default: false
         type: boolean
@@ -42,38 +51,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check upstream
-        id: check
+      - name: Bump channels
+        id: bump
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          CHANNEL: ${{ inputs.channel || 'both' }}
           VERSION: ${{ inputs.version }}
+          RUNSERVICE: ${{ inputs.runservice || false }}
         run: |
-          out=$(python3 tools/bump.py --dry-run ${VERSION:+--version "$VERSION"})
-          echo "$out"
-          if grep -q '^would bump' <<<"$out"; then echo "bump=1" >> "$GITHUB_OUTPUT"; fi
-
-      - name: Bump recipes
-        if: steps.check.outputs.bump == '1'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-        run: python3 tools/bump.py ${VERSION:+--version "$VERSION"}
+          case "$CHANNEL" in both) channels="stable beta" ;; *) channels="$CHANNEL" ;; esac
+          if [[ -n "$VERSION" && "$CHANNEL" == both ]]; then
+            echo "::error::--version needs a single channel"; exit 1
+          fi
+          trigger=""
+          for ch in $channels; do
+            out=$(python3 tools/bump.py --channel "$ch" --dry-run ${VERSION:+--version "$VERSION"})
+            echo "$out"
+            if grep -q 'would bump' <<<"$out"; then
+              python3 tools/bump.py --channel "$ch" ${VERSION:+--version "$VERSION"}
+              trigger="$trigger $ch"
+            elif [[ "$RUNSERVICE" == true ]]; then
+              trigger="$trigger $ch"
+            fi
+          done
+          echo "trigger=${trigger# }" >> "$GITHUB_OUTPUT"
 
       - name: Push recipes back to the repo
-        if: steps.check.outputs.bump == '1'
         run: |
-          ver=$(sed -n 's/^Version:[[:space:]]*//p' packages/bambustudio/bambustudio.spec)
+          git diff --quiet packages && exit 0
+          msg=""
+          for ch in stable beta; do
+            git diff --quiet "packages/$ch" && continue
+            ver=$(sed -n 's/^Version:[[:space:]]*//p' "packages/$ch/bambustudio/bambustudio.spec")
+            msg="${msg:+$msg, }$ch ${ver}"
+          done
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add packages
-          git commit -m "Update to upstream ${ver}"
+          git commit -m "Update to upstream: ${msg}"
           git push
 
-      - name: Trigger OBS source service
-        if: steps.check.outputs.bump == '1' || inputs.runservice
+      - name: Trigger OBS source services
+        if: steps.bump.outputs.trigger != ''
         env:
           OBS_SERVICE_TOKEN: ${{ secrets.OBS_SERVICE_TOKEN }}
+          TRIGGER: ${{ steps.bump.outputs.trigger }}
         run: |
-          curl -fsS --retry 3 --retry-all-errors -X POST \
-            -H "Authorization: Token ${OBS_SERVICE_TOKEN}" \
-            "https://api.opensuse.org/trigger/runservice?project=home:ciriarte:bambustudio&package=bambustudio"
+          for ch in $TRIGGER; do
+            curl -fsS --retry 3 --retry-all-errors -X POST \
+              -H "Authorization: Token ${OBS_SERVICE_TOKEN}" \
+              "https://api.opensuse.org/trigger/runservice?project=home:ciriarte:bambustudio:${ch}&package=bambustudio"
+          done

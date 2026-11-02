@@ -10,9 +10,12 @@
 * Email: ciro.iriarte+software@gmail.com (also the git author email for this repo)
 
 # Enabler
-* OBS project: `home:ciriarte:bambustudio` (osc CLI, user `ciriarte`)
+* OBS projects (osc CLI, user `ciriarte`), parent `home:ciriarte:bambustudio` holds nothing:
+  - `home:ciriarte:bambustudio:stable` ← `packages/stable/bambustudio`: newest non-pre-release
+  - `home:ciriarte:bambustudio:beta` ← `packages/beta/bambustudio`: newest release of any kind
 * Each OBS package holds only `_service` + `_constraints`; `_service` pulls the
-  recipe from this repo's `main` (obs_scm) and upstream tarballs (download_files).
+  channel's recipe from this repo's `main` (obs_scm) and upstream tarballs (download_files).
+* Recipe fixes usually land in beta first; carry them to stable when it reaches that version.
 
 # Scope
 ## Distributions
@@ -21,7 +24,7 @@
   Ubuntu LTS, Debian stable. Debian/Ubuntu need `debian.*` recipe files.
 
 ## Packages
-* `bambustudio` (single OBS package). Dependency policy: distribution libraries
+* `bambustudio` (one OBS package per channel project). Dependency policy: distribution libraries
   wherever compatible; only the bambulab wxWidgets fork, Boost, TBB, OCCT, CGAL,
   OpenVDB (+Blosc, OpenEXR) and libnoise are built from upstream's `deps/`
   superbuild as static archives in the build tree, linked in, never installed.

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Track upstream BambuStudio stable releases and bump the recipe.
+"""Track upstream BambuStudio releases and bump one channel's recipe.
 
-Detects the newest *stable* GitHub release of bambulab/BambuStudio (pre-release
-"Public Beta" builds are skipped). If it is newer than the packaged version:
+Channels (packages/<channel>/bambustudio, OBS home:ciriarte:bambustudio:<channel>):
+  stable  newest GitHub release not marked pre-release
+  beta    newest release of any kind, Public Beta or stable, so the beta
+          channel is never behind stable
+
+If the channel's pick is newer than its packaged version:
 
   1. fetches the release tarball and extracts deps/ + cmake/ only,
   2. regenerates the bundled-dependency Source list (tools/gen_deps.py),
@@ -11,7 +15,7 @@ Detects the newest *stable* GitHub release of bambulab/BambuStudio (pre-release
   4. updates Version / upstream_ver / wx_commit in the spec and prepends a
      .changes entry.
 
-Usage: tools/bump.py [--dry-run] [--version 02.08.02.61]
+Usage: tools/bump.py --channel stable|beta [--dry-run] [--version 02.08.02.61]
   --dry-run   print "would bump A -> B" (or "up to date") and change nothing
   --version   bump to this upstream tag (without the leading v) instead of latest
 """
@@ -28,7 +32,6 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PKGS = ROOT / "packages"
-SPEC = PKGS / "bambustudio" / "bambustudio.spec"
 UPSTREAM = "bambulab/BambuStudio"
 WX_FORK = "bambulab/wxWidgets"
 PACKAGER = "Ciro Iriarte <ciro.iriarte+software@gmail.com>"
@@ -53,8 +56,17 @@ def key(upstream_ver):
     return tuple(int(x) for x in upstream_ver.split("."))
 
 
-def current_upstream_ver():
-    m = re.search(r"^%global\s+upstream_ver\s+(\S+)", SPEC.read_text(), re.M)
+def latest_release(channel):
+    if channel == "stable":
+        return gh(f"repos/{UPSTREAM}/releases/latest")  # excludes pre-releases
+    # Only well-formed vNN.NN.NN.NN tags (upstream once published a "V02..." tag).
+    rels = [r for r in gh(f"repos/{UPSTREAM}/releases?per_page=30")
+            if not r["draft"] and re.fullmatch(r"v\d+(\.\d+){3}", r["tag_name"])]
+    return max(rels, key=lambda r: key(r["tag_name"].lstrip("v")))
+
+
+def current_upstream_ver(spec):
+    m = re.search(r"^%global\s+upstream_ver\s+(\S+)", spec.read_text(), re.M)
     return m.group(1)
 
 
@@ -72,8 +84,7 @@ def set_version(text, version):
     return new
 
 
-def prepend_changes(pkg, lines):
-    path = PKGS / pkg / f"{pkg}.changes"
+def prepend_changes(path, lines):
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%a %b %e %H:%M:%S UTC %Y")
     entry = "-" * 67 + f"\n{stamp} - {PACKAGER}\n\n" + "\n".join(lines) + "\n\n"
     path.write_text(entry + path.read_text())
@@ -104,38 +115,43 @@ def wx_commit_at(when):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--channel", required=True, choices=("stable", "beta"))
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--version", help="upstream version without the leading v")
     args = ap.parse_args()
 
+    pkgdir = PKGS / args.channel / "bambustudio"
+    spec = pkgdir / "bambustudio.spec"
     if args.version:
         rel = gh(f"repos/{UPSTREAM}/releases/tags/v{args.version}")
     else:
-        rel = gh(f"repos/{UPSTREAM}/releases/latest")  # excludes pre-releases
+        rel = latest_release(args.channel)
     new = rel["tag_name"].lstrip("v")
-    cur = current_upstream_ver()
+    cur = current_upstream_ver(spec)
 
     if key(new) <= key(cur) and not args.version:
-        print(f"up to date: {cur}")
+        print(f"{args.channel}: up to date: {cur}")
         return
     if args.dry_run:
-        print(f"would bump {cur} -> {new}")
+        print(f"{args.channel}: would bump {cur} -> {new}")
         return
 
     src = fetch_source(new)
-    subprocess.run([sys.executable, str(ROOT / "tools/gen_deps.py"), str(src)], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/gen_deps.py"), str(src), "--spec", str(spec)],
+                   check=True)
 
     wx = wx_commit_at(rel["published_at"])
     version = rpm_version(new)
-    text = set_version(set_global(SPEC.read_text(), "upstream_ver", new), version)
-    SPEC.write_text(set_global(text, "wx_commit", wx))
+    text = set_version(set_global(spec.read_text(), "upstream_ver", new), version)
+    spec.write_text(set_global(text, "wx_commit", wx))
 
     notes = f"https://github.com/{UPSTREAM}/releases/tag/v{new}"
-    prepend_changes("bambustudio", [f"- Update to {version} (upstream v{new})",
+    kind = "Public Beta" if rel["prerelease"] else "stable"
+    prepend_changes(pkgdir / "bambustudio.changes", [f"- Update to {version} (upstream v{new}, {kind})",
                                     f"  * Release notes: {notes}",
                                     "  * Regenerate bundled dependency sources from upstream deps/",
                                     f"  * Pin {WX_FORK} at {wx[:12]}"])
-    print(f"bumped {cur} -> {new} (wxWidgets {wx[:12]})")
+    print(f"{args.channel}: bumped {cur} -> {new} (wxWidgets {wx[:12]})")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the bundled-dependency Source list of bambustudio.spec.
+"""Regenerate the bundled-dependency Source list of a bambustudio.spec.
 
 Most BambuStudio dependencies come from the target distribution. The few that
 cannot (the bambulab wxWidgets fork, Boost, TBB, OCCT, CGAL, OpenVDB, libnoise)
@@ -23,7 +23,7 @@ Guardrail: the only git-based dependency allowed is the bambulab wxWidgets fork
 (Source1, pinned commit). Any other git clone, or a download without a SHA256,
 aborts so a bump cannot produce a recipe that needs network at build time.
 
-Usage: tools/gen_deps.py <upstream-source-dir> [--spec PATH]
+Usage: tools/gen_deps.py <upstream-source-dir> --spec packages/<channel>/bambustudio/bambustudio.spec
 """
 import argparse
 import pathlib
@@ -33,7 +33,6 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SPEC = ROOT / "packages/bambustudio/bambustudio.spec"
 BEGIN = "# BEGIN generated deps sources (tools/gen_deps.py)"
 END = "# END generated deps sources"
 FIRST_SOURCE = 100
@@ -69,7 +68,8 @@ def parse_download_script(path, dl_dir):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("source", type=pathlib.Path, help="extracted upstream BambuStudio tree")
-    ap.add_argument("--spec", type=pathlib.Path, default=SPEC)
+    ap.add_argument("--spec", type=pathlib.Path, required=True,
+                    help="packages/<channel>/bambustudio/bambustudio.spec")
     args = ap.parse_args()
 
     spec_text = args.spec.read_text()
