@@ -171,6 +171,16 @@ if grep -rqE '#include *[<"]hpdf/' src; then
     exit 1
 fi
 
+# System cereal exports only the cereal::cereal target; upstream links the
+# bare name "cereal" (defined by its bundled copy), which CMake would turn into
+# -lcereal. cereal is header-only: forward the bare name to the system target.
+sed -i '/^find_package(cereal REQUIRED)$/a\
+if(NOT TARGET cereal)\
+    add_library(cereal INTERFACE)\
+    target_link_libraries(cereal INTERFACE cereal::cereal)\
+endif()' CMakeLists.txt
+grep -q 'target_link_libraries(cereal INTERFACE cereal::cereal)' CMakeLists.txt
+
 # Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
 # Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
 # local Source via file://; upstream's SHA256 check still applies.

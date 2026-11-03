@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Nov  3 15:46:33 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Map upstream's bare "cereal" link target to the system cereal::cereal
+
+-------------------------------------------------------------------
 Tue Nov  3 14:30:47 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Rewrite <hpdf/...> includes for the flat system libharu headers
