@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Nov  3 18:55:34 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Drop the headers, LICENSE.txt and README.md the vendored mcut
+  installs into the prefix
+
+-------------------------------------------------------------------
 Tue Nov  3 17:32:14 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Link the system OpenCV modules (core, imgproc, imgcodecs) instead

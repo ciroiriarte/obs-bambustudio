@@ -303,6 +303,11 @@ cmake --build build -j $NCPUS
 
 %install
 DESTDIR=%{buildroot} cmake --install build
+# The vendored mcut (src/mcut) installs its development files and docs into
+# the prefix; it is linked statically and nothing else needs them.
+rm -r %{buildroot}%{_includedir}/mcut
+rm %{buildroot}%{_prefix}/LICENSE.txt %{buildroot}%{_prefix}/README.md
+rmdir --ignore-fail-on-non-empty %{buildroot}%{_includedir}
 %if 0%{?suse_version}
 %fdupes %{buildroot}%{_datadir}/BambuStudio
 %endif
