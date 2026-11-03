@@ -161,6 +161,16 @@ sed -i -e 's|GIT_REPOSITORY "https://github.com/bambulab/wxWidgets"|URL %{SOURCE
        -e '/GIT_TAG master/d' deps/wxWidgets/wxWidgets.cmake
 grep -q 'URL %{SOURCE1}' deps/wxWidgets/wxWidgets.cmake
 
+# System libharu installs its headers flat (%{_includedir}/hpdf*.h); upstream's
+# bundled copy uses include/hpdf/. Rewrite <hpdf/...> includes to the flat form.
+files=$(grep -rlE '#include *[<"]hpdf/' src)
+test -n "$files"
+sed -i -E 's|(#include *[<"])hpdf/|\1|' $files
+if grep -rqE '#include *[<"]hpdf/' src; then
+    echo "error: unrewritten hpdf/ include" >&2
+    exit 1
+fi
+
 # Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
 # Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
 # local Source via file://; upstream's SHA256 check still applies.
