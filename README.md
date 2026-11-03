@@ -28,7 +28,7 @@ repository, not both.
 
 | Distro | `REPO` token | Arch | Status |
 |--------|--------------|------|--------|
-| openSUSE Slowroll | `openSUSE_Slowroll` | x86_64 | primary target |
+| openSUSE Slowroll | `openSUSE_Slowroll` | x86_64 | building (stable and beta) |
 | openSUSE Tumbleweed / Leap 16.0 | — | — | planned |
 | Rocky Linux 9 / 10 | — | — | planned |
 | Ubuntu 24.04 / Debian 13 | — | — | planned (needs `debian.*` recipe) |
@@ -74,8 +74,8 @@ use, as on any other platform.
 
 Libraries come from the **target distribution** wherever it ships a version
 Bambu Studio builds against: GTK3, WebKitGTK 4.1, GStreamer, OpenSSL, curl,
-FFmpeg 7, OpenCV, assimp, GLEW, GLFW, NLopt, cereal, GMP/MPFR, freetype,
-libpng/libjpeg/libtiff/expat, zlib.
+FFmpeg 7, OpenCV, assimp, GLEW, GLFW, NLopt, cereal, libharu, GMP/MPFR,
+freetype, libpng/libjpeg/libtiff/expat, zlib.
 
 Only these are **bundled**, because the distributions cannot provide a usable
 version:
@@ -101,6 +101,22 @@ The binary is linked with `-Wl,--exclude-libs,ALL`, so bundled symbols are not
 exported and cannot interpose on (or be interposed by) a distribution copy of
 the same library that a system dependency loads at runtime. `%check` fails the
 build if `bambu-studio` dynamically links or exports any bundled library.
+
+### Adapting upstream to system libraries
+
+Upstream's CMake assumes its own bundled copies. The spec bridges the
+differences; each step checks that it applied and fails the build otherwise,
+so an upstream change surfaces as a clear `%prep` error on the next bump:
+
+| Where | Adjustment | Why |
+|-------|------------|-----|
+| `%prep` | `<hpdf/...>` includes → `<...>` | system libharu installs `hpdf*.h` flat in `/usr/include` |
+| `%prep` | `cereal` INTERFACE target → `cereal::cereal` | system cereal exports only the namespaced target; the bare name became `-lcereal` |
+| `%prep` | `opencv_world` → `${OpenCV_LIBS}` (core, imgproc, imgcodecs) | distro OpenCV is per-module, not the monolithic world library |
+| `%prep` | drop the `OSMesa` link | never called directly (GLFW dlopens it); current Mesa no longer ships libOSMesa |
+| `%install` | delete `include/mcut`, `/usr/LICENSE.txt`, `/usr/README.md` | the vendored, statically linked mcut installs its dev files into the prefix |
+| configure | `-DCMAKE_SKIP_INSTALL_RPATH=ON` | upstream sets `$ORIGIN` RUNPATH on Linux (rpmlint badness 10000) |
+| BuildRequires | `libquadmath-devel` | Boost.Multiprecision includes `quadmath.h` when GCC enables `__float128` |
 
 ### Building offline on OBS
 
