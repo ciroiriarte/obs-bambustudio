@@ -288,6 +288,7 @@ cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+    -DCMAKE_SKIP_INSTALL_RPATH=ON \
     -DCMAKE_PREFIX_PATH="$PWD/deps-destdir/usr/local" \
     -DOpenGL_GL_PREFERENCE=GLVND \
     -DSLIC3R_STATIC=ON \
