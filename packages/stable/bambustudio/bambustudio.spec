@@ -181,6 +181,25 @@ if(NOT TARGET cereal)\
 endif()' CMakeLists.txt
 grep -q 'target_link_libraries(cereal INTERFACE cereal::cereal)' CMakeLists.txt
 
+# Upstream links its bundled monolithic opencv_world; the distribution ships
+# per-module libraries. Find and link the modules the code uses.
+sed -i -e 's/^find_package(OpenCV REQUIRED core)$/find_package(OpenCV REQUIRED core imgproc imgcodecs)/' \
+       -e 's/^\( *\)opencv_world$/\1${OpenCV_LIBS}/' src/libslic3r/CMakeLists.txt
+grep -q '^find_package(OpenCV REQUIRED core imgproc imgcodecs)$' src/libslic3r/CMakeLists.txt
+grep -q '^ *${OpenCV_LIBS}$' src/libslic3r/CMakeLists.txt
+if grep -q 'opencv_world' src/libslic3r/CMakeLists.txt; then
+    echo "error: opencv_world still linked" >&2
+    exit 1
+fi
+
+# Nothing calls OSMesa directly (GLFW dlopens it for its OSMesa context API)
+# and current Mesa no longer ships libOSMesa: drop the hard link.
+sed -i 's/^\( *target_link_libraries(libslic3r_gui ${DBUS_LIBRARIES}\) OSMesa)$/\1)/' src/slic3r/CMakeLists.txt
+if grep -qw 'OSMesa' src/slic3r/CMakeLists.txt; then
+    echo "error: OSMesa still linked" >&2
+    exit 1
+fi
+
 # Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
 # Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
 # local Source via file://; upstream's SHA256 check still applies.
