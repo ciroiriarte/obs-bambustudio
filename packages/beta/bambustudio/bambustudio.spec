@@ -124,6 +124,7 @@ BuildRequires:  pkgconfig(zlib)
 BuildRequires:  cereal-devel
 BuildRequires:  gmp-devel
 BuildRequires:  libharu-devel
+BuildRequires:  libquadmath-devel
 BuildRequires:  mpfr-devel
 BuildRequires:  pkgconfig(assimp)
 BuildRequires:  pkgconfig(glew)

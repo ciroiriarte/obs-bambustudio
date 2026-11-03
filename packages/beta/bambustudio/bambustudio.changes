@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Nov  3 13:35:03 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- BuildRequires: libquadmath-devel; Boost.Multiprecision includes
+  quadmath.h when GCC enables __float128
+
+-------------------------------------------------------------------
 Mon Nov  2 19:54:09 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Link the system libharu (BuildRequires: libharu-devel)
