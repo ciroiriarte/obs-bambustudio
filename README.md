@@ -115,6 +115,7 @@ so an upstream change surfaces as a clear `%prep` error on the next bump:
 | `%prep` | `opencv_world` → `${OpenCV_LIBS}` (core, imgproc, imgcodecs) | distro OpenCV is per-module, not the monolithic world library |
 | `%prep` | `glewInit()` → `glewContextInit()` | distro GLEW is GLX-only; upstream's bundled one is built for EGL, so `glewInit()` fails on EGL contexts (`GLEW_ERROR_NO_GLX_DISPLAY`) |
 | `%prep` | CLI thumbnails: OpenGL 3.3 on the native context API | upstream passes GLFW's *library* version as the GL version ("3.5" with GLFW 3.5) and forces OSMesa |
+| `%prep` | `main()` defaults `SSL_CERT_FILE` to the distro CA bundle | the closed network plugin bundles its own OpenSSL, which has no valid CA path here; upstream's static builds set the variable, ours link the system OpenSSL (without it: curl error 60, no printers) |
 | `%prep` | drop the `OSMesa` link | never called directly (GLFW dlopens it); current Mesa no longer ships libOSMesa |
 | `%install` | delete `include/mcut`, `/usr/LICENSE.txt`, `/usr/README.md` | the vendored, statically linked mcut installs its dev files into the prefix |
 | configure | `-DCMAKE_SKIP_INSTALL_RPATH=ON` | upstream sets `$ORIGIN` RUNPATH on Linux (rpmlint badness 10000) |

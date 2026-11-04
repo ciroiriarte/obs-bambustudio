@@ -221,6 +221,24 @@ if grep -rqE 'glewInit\(\)|GLFW_CONTEXT_VERSION_MAJOR, gl_major|GLFW_CONTEXT_VER
     exit 1
 fi
 
+# Bambu's closed network plugin (libbambu_networking.so, downloaded at run
+# time) carries its own OpenSSL, whose built-in CA path does not exist on
+# this distribution; it trusts SSL_CERT_FILE. Upstream's static builds set
+# that variable from a list of distro CA bundles (Http.cpp, only with
+# OPENSSL_CERT_OVERRIDE); this build links the system OpenSSL, so nothing
+# sets it, and every cloud call fails verification (curl error 60: no
+# printer list, no printers to send to). Set it at startup unless the user
+# already did.
+sed -i '/^int main(int argc, char \*\*argv)$/,/^}$/ s|^    std::set_new_handler(bbl_out_of_memory_handler);$|&\
+    if (!::getenv("SSL_CERT_FILE"))\
+        for (const char *ca : {"/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/certs/ca-certificates.crt",\
+                               "/etc/ssl/ca-bundle.pem"})\
+            if (boost::filesystem::exists(ca)) { ::setenv("SSL_CERT_FILE", ca, 0); break; }|' src/BambuStudio.cpp
+if ! grep -q 'setenv("SSL_CERT_FILE"' src/BambuStudio.cpp; then
+    echo "error: SSL_CERT_FILE startup default not applied" >&2
+    exit 1
+fi
+
 # Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
 # Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
 # local Source via file://; upstream's SHA256 check still applies.

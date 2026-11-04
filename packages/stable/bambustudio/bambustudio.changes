@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Nov  4 19:01:47 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Default SSL_CERT_FILE to the distribution CA bundle at startup: the
+  Bambu network plugin's own OpenSSL could not find CA certificates, so
+  cloud requests failed (curl error 60) and no printers were listed
+
+-------------------------------------------------------------------
 Wed Nov  4 01:13:08 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Initialise the GLX-only system GLEW with glewContextInit(): glewInit()
