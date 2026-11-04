@@ -200,6 +200,27 @@ if grep -qw 'OSMesa' src/slic3r/CMakeLists.txt; then
     exit 1
 fi
 
+# OpenGL loading with the distribution's GLEW and GLFW:
+# - Upstream's bundled GLEW is built with GLEW_EGL (its wxWidgets uses EGL on
+#   GTK3); the distro GLEW is GLX-only, so glewInit() fails on EGL contexts
+#   with GLEW_ERROR_NO_GLX_DISPLAY. glewContextInit() loads core GL and the
+#   extensions without the window-system check (no GLX/EGL GLEW API is used).
+# - The CLI thumbnail renderer requests an OpenGL context whose version is
+#   GLFW's own library version (3.3 when bundled, "3.5" with system GLFW 3.5:
+#   invalid) and forces OSMesa, which current Mesa no longer ships. Request
+#   OpenGL 3.3 compatibility on the native context API instead.
+files=$(grep -rl 'glewInit()' src)
+test -n "$files"
+sed -i 's/\bglewInit()/glewContextInit()/' $files
+sed -i -e 's/glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gl_major);/glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);/' \
+       -e 's/glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_minor);/glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);/' \
+       -e '/glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_OSMESA_CONTEXT_API);/d' src/BambuStudio.cpp
+grep -q 'glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);' src/BambuStudio.cpp
+if grep -rqE 'glewInit\(\)|GLFW_CONTEXT_VERSION_MAJOR, gl_major|GLFW_CONTEXT_VERSION_MINOR, gl_minor|GLFW_OSMESA_CONTEXT_API' src; then
+    echo "error: unpatched GLEW/GLFW context setup" >&2
+    exit 1
+fi
+
 # Downloads a bundled recipe performs itself (e.g. OpenMeshCraft fetches
 # Eigen/fmt/... from its generated prepare_source.cmake): point each URL at its
 # local Source via file://; upstream's SHA256 check still applies.

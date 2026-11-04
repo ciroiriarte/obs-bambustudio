@@ -113,6 +113,8 @@ so an upstream change surfaces as a clear `%prep` error on the next bump:
 | `%prep` | `<hpdf/...>` includes → `<...>` | system libharu installs `hpdf*.h` flat in `/usr/include` |
 | `%prep` | `cereal` INTERFACE target → `cereal::cereal` | system cereal exports only the namespaced target; the bare name became `-lcereal` |
 | `%prep` | `opencv_world` → `${OpenCV_LIBS}` (core, imgproc, imgcodecs) | distro OpenCV is per-module, not the monolithic world library |
+| `%prep` | `glewInit()` → `glewContextInit()` | distro GLEW is GLX-only; upstream's bundled one is built for EGL, so `glewInit()` fails on EGL contexts (`GLEW_ERROR_NO_GLX_DISPLAY`) |
+| `%prep` | CLI thumbnails: OpenGL 3.3 on the native context API | upstream passes GLFW's *library* version as the GL version ("3.5" with GLFW 3.5) and forces OSMesa |
 | `%prep` | drop the `OSMesa` link | never called directly (GLFW dlopens it); current Mesa no longer ships libOSMesa |
 | `%install` | delete `include/mcut`, `/usr/LICENSE.txt`, `/usr/README.md` | the vendored, statically linked mcut installs its dev files into the prefix |
 | configure | `-DCMAKE_SKIP_INSTALL_RPATH=ON` | upstream sets `$ORIGIN` RUNPATH on Linux (rpmlint badness 10000) |

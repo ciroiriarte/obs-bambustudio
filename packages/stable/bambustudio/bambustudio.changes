@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed Nov  4 01:13:08 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Initialise the GLX-only system GLEW with glewContextInit(): glewInit()
+  failed on EGL contexts (GLEW_ERROR_NO_GLX_DISPLAY)
+- CLI thumbnails: request an OpenGL 3.3 context on the native API instead
+  of GLFW's library version and the removed OSMesa
+
+-------------------------------------------------------------------
 Tue Nov  3 20:16:55 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Do not install bambu-studio with upstream's $ORIGIN RUNPATH
