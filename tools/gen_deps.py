@@ -139,7 +139,9 @@ def main():
         lines.append(f"Source{i}:      {url}#/{f}")
         fetch_map.append(f"{url}@@{f}")
         i += 1
-    lines.append("# URL@@file map for %prep: nested downloads are rewritten to file:// Sources")
+    # No '%' in generated comments: rpm expands macros there, and openSUSE's
+    # %prep macro injects the debuginfo/debugsource subpackages where it expands.
+    lines.append("# URL@@file map for the prep section: nested downloads are rewritten to file:// Sources")
     lines.append("%global nested_fetches " + (" ".join(fetch_map) or "%{nil}"))
     lines.append(END)
 

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Nov  5 10:26:02 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Build -debuginfo/-debugsource subpackages for crash backtraces; keep
+  '%' out of the generated Source comments (rpm expanded the %prep
+  macro there and injected the debug packages mid-preamble)
+
+-------------------------------------------------------------------
 Wed Nov  4 19:01:47 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Default SSL_CERT_FILE to the distribution CA bundle at startup: the

@@ -79,7 +79,7 @@ Source110:      https://github.com/greg7mdp/parallel-hashmap/archive/154c63489e8
 Source111:      https://github.com/oneapi-src/oneTBB/archive/d75ea937f7e480bd7775d7dab224e0b38451bb40.zip#/nested__OpenMeshCraft__d75ea937f7e480bd7775d7dab224e0b38451bb40.zip
 # nested download in deps/OpenMeshCraft, sha256 d368f9c39a33a3aef800f5be372ec1df1c12ad57ada1f60adc62f24c0e348469
 Source112:      https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip#/nested__OpenMeshCraft__10.2.1.zip
-# URL@@file map for %prep: nested downloads are rewritten to file:// Sources
+# URL@@file map for the prep section: nested downloads are rewritten to file:// Sources
 %global nested_fetches https://gitlab.com/libeigen/eigen/-/archive/68f4e58cfacc686583d16cff90361f0b43bc2c1b/eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip@@nested__OpenMeshCraft__eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip https://github.com/greg7mdp/parallel-hashmap/archive/154c63489e84d5569d3b466342a2ae8fd99e4734.zip@@nested__OpenMeshCraft__154c63489e84d5569d3b466342a2ae8fd99e4734.zip https://github.com/oneapi-src/oneTBB/archive/d75ea937f7e480bd7775d7dab224e0b38451bb40.zip@@nested__OpenMeshCraft__d75ea937f7e480bd7775d7dab224e0b38451bb40.zip https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip@@nested__OpenMeshCraft__10.2.1.zip
 # END generated deps sources
 BuildRequires:  binutils

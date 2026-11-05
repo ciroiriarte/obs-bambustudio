@@ -68,7 +68,7 @@ Source105:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f
 Source106:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
 # sha256 7aae3433e4c841a1b15ddf40dc995b3d32efb154b92b6796888002e275bff859
 Source107:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
-# URL@@file map for %prep: nested downloads are rewritten to file:// Sources
+# URL@@file map for the prep section: nested downloads are rewritten to file:// Sources
 %global nested_fetches %{nil}
 # END generated deps sources
 BuildRequires:  binutils
