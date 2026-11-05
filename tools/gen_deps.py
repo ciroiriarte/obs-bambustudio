@@ -104,10 +104,13 @@ def main():
     with tempfile.TemporaryDirectory(prefix="bbs-depcfg-") as tmp:
         tmp = pathlib.Path(tmp)
         build, dl_dir = tmp / "build", tmp / "dl"
-        subprocess.run(
+        cfg = subprocess.run(
             ["cmake", "-Wno-dev", "-G", "Ninja", "-S", str(args.source / "deps"), "-B", str(build),
              f"-DDEP_DOWNLOAD_DIR={dl_dir}", *flags],
-            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            capture_output=True, text=True)
+        if cfg.returncode:
+            # Quiet on success; on failure the CMake output is the only clue (CI logs).
+            sys.exit(f"configuring {args.source / 'deps'} failed:\n{cfg.stdout}{cfg.stderr}")
         dry = subprocess.run(["ninja", "-C", str(build), "-n", *targets],
                              check=True, capture_output=True, text=True).stdout
         needed = set(re.findall(r"Performing download step .*? for 'dep_(\w+)'", dry))
