@@ -17,10 +17,10 @@
 #
 
 # Upstream tags are zero-padded (v02.08.02.61); RPM Version drops the padding.
-%global upstream_ver   02.08.02.61
+%global upstream_ver   02.09.01.70
 # bambulab/wxWidgets is consumed upstream as "GIT_TAG master"; pin the fork
 # commit that was current when v%%{upstream_ver} was released.
-%global wx_commit      a9d946902685b9946d8775f07d2a73a9b5bef394
+%global wx_commit      abb542694ef4534a50e65c5b877b2774d02952ae
 # Superbuild configuration. tools/gen_deps.py reads these two lines to compute
 # which upstream tarballs become Source lines, so edit them only here and
 # re-run the generator. DEP_BUILD_*=OFF / *_FOUND=ON select the system library.
@@ -31,12 +31,12 @@
 # store (GitHub release asset of the packaging repo). tools/vendor_web.py sets
 # both values from upstream's PNPM_VERSION and pnpm-lock.yaml.
 %global pnpm_version   10.12.1
-%global web_store      9c72e1a6c919
+%global web_store      bff509f3dbc2
 # LTO over the large static link needs far more memory than OBS workers have.
 %global _lto_cflags    %{nil}
 
 Name:           bambustudio
-Version:        2.8.2.61
+Version:        2.9.1.70
 Release:        0
 Summary:        Slicer for Bambu Lab and other FDM 3D printers
 # Bundled, statically linked: wxWidgets fork (wxWindows), Boost (BSL-1.0),
