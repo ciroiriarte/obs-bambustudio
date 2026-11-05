@@ -63,10 +63,15 @@ def build_store(src, pnpm_version, out):
             shutil.copy2(src / DEVICE_PAGE / f, work / f)
         (work / "pnpm-workspace.yaml").write_text(SUPPORTED_ARCH)
         store = tmp / "pnpm-store"
-        subprocess.run(["node", str(tmp / "package/bin/pnpm.cjs"), "fetch",
+        # Clean environment, but node from the caller's PATH: CI's setup-node
+        # installs it outside /usr/bin.
+        node = shutil.which("node")
+        if not node:
+            sys.exit("node not found in PATH")
+        subprocess.run([node, str(tmp / "package/bin/pnpm.cjs"), "fetch",
                         "--store-dir", str(store)],
                        cwd=work, check=True,
-                       env={"PATH": "/usr/bin:/bin", "HOME": str(tmp),
+                       env={"PATH": f"{pathlib.Path(node).parent}:/usr/bin:/bin", "HOME": str(tmp),
                             "npm_config_update_notifier": "false"})
         subprocess.run(["tar", "--zstd", "--sort=name", "--owner=0", "--group=0",
                         "--numeric-owner", "-C", str(tmp), "-cf", str(out), "pnpm-store"],
