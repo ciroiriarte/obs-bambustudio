@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Nov  5 22:26:54 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Update to 2.9.1.70 (upstream v02.09.01.70, stable)
+  * Release notes: https://github.com/bambulab/BambuStudio/releases/tag/v02.09.01.70
+  * Regenerate bundled dependency sources from upstream deps/
+  * Pin bambulab/wxWidgets at abb542694ef4
+
+-------------------------------------------------------------------
 Thu Nov  5 10:26:02 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Build -debuginfo/-debugsource subpackages for crash backtraces; keep
