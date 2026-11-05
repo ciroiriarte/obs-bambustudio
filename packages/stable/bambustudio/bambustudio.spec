@@ -25,7 +25,7 @@
 # which upstream tarballs become Source lines, so edit them only here and
 # re-run the generator. DEP_BUILD_*=OFF / *_FOUND=ON select the system library.
 %global deps_cmake_flags -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DDEP_WX_GTK3=ON -DDEP_BUILD_PNG=OFF -DDEP_BUILD_JPEG=OFF -DDEP_BUILD_TIFF=OFF -DDEP_BUILD_OPENSSL=OFF -DDEP_BUILD_GLFW=OFF -DDEP_BUILD_FREETYPE=OFF -DDEP_BUILD_GMP=OFF -DDEP_BUILD_MPFR=OFF -DDEP_BUILD_FFMPEG=OFF -DDEP_BUILD_LIBHARU=OFF -DEXPAT_FOUND=ON -DCURL_FOUND=ON
-%global deps_targets   dep_wxWidgets dep_Boost dep_TBB dep_OCCT dep_CGAL dep_OpenVDB dep_libnoise
+%global deps_targets   dep_wxWidgets dep_Boost dep_TBB dep_OCCT dep_CGAL dep_OpenVDB dep_libnoise dep_OpenMeshCraft
 # device_page web frontend (src/slic3r/GUI/DeviceWeb): built with the distro
 # Node.js, pnpm from its npm tarball, and the npm packages from a vendored pnpm
 # store (GitHub release asset of the packaging repo). tools/vendor_web.py sets
@@ -42,8 +42,9 @@ Summary:        Slicer for Bambu Lab and other FDM 3D printers
 # Bundled, statically linked: wxWidgets fork (wxWindows), Boost (BSL-1.0),
 # oneTBB (Apache-2.0), OCCT (LGPL-2.1-only WITH OCCT-exception-1.0),
 # CGAL (GPL-3.0-or-later / LGPL-3.0-or-later), OpenVDB (MPL-2.0),
-# Blosc (BSD-3-Clause), OpenEXR (BSD-3-Clause), libnoise (LGPL-2.1-or-later).
-License:        AGPL-3.0-only AND BSL-1.0 AND Apache-2.0 AND GPL-3.0-or-later AND LGPL-3.0-or-later AND LGPL-2.1-or-later AND MPL-2.0 AND BSD-3-Clause
+# Blosc (BSD-3-Clause), OpenEXR (BSD-3-Clause), libnoise (LGPL-2.1-or-later),
+# OpenMeshCraft (GPL-3.0-only).
+License:        AGPL-3.0-only AND GPL-3.0-only AND BSL-1.0 AND Apache-2.0 AND GPL-3.0-or-later AND LGPL-3.0-or-later AND LGPL-2.1-or-later AND MPL-2.0 AND BSD-3-Clause
 Group:          Productivity/Graphics/CAD
 URL:            https://github.com/bambulab/BambuStudio
 Source0:        https://github.com/bambulab/BambuStudio/archive/refs/tags/v%{upstream_ver}.tar.gz#/BambuStudio-%{upstream_ver}.tar.gz
@@ -62,14 +63,24 @@ Source102:      https://github.com/CGAL/cgal/archive/refs/tags/v5.4.zip#/dep__CG
 Source103:      https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_0.zip#/dep__OCCT__V7_6_0.zip
 # sha256 0307a3d7e1fa1e77e9d84d7e9a8694583fbbbfd50bdc6884e2c96b8ef6b902de
 Source104:      https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v2.5.5.zip#/dep__OpenEXR__v2.5.5.zip
+# sha256 632cd806ce932d6a1d76df0e86ecf8bfc22480e76f80a638a28474f5262e2b9e
+Source105:      https://github.com/bambulab/OpenMeshCraft/archive/0e8d12c3df54804393593ab5d86c05caa340cbee.zip#/dep__OpenMeshCraft__0e8d12c3df54804393593ab5d86c05caa340cbee.zip
 # sha256 f353e7b99bd0cbfc27ac9082de51acf32a8bc0b3e21ff9661ecca6f205ec1d81
-Source105:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip#/dep__OpenVDB__a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip
+Source106:      https://github.com/tamasmeszaros/openvdb/archive/a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip#/dep__OpenVDB__a68fd58d0e2b85f01adeb8b13d7555183ab10aa5.zip
 # sha256 83ea786c964a384dd72534f9854b419716f412f9d43c0be88d41874763e7bb47
-Source106:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
+Source107:      https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.5.0.zip#/dep__TBB__v2021.5.0.zip
 # sha256 7aae3433e4c841a1b15ddf40dc995b3d32efb154b92b6796888002e275bff859
-Source107:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
+Source108:      https://github.com/bambulab/libnoise/archive/refs/tags/v1.0.0.zip#/dep__libnoise__v1.0.0.zip
+# nested download in deps/OpenMeshCraft, sha256 41d12f1fc8e18606f39312681c6e1b957a4746ed97676c576e23e73554c6a662
+Source109:      https://gitlab.com/libeigen/eigen/-/archive/68f4e58cfacc686583d16cff90361f0b43bc2c1b/eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip#/nested__OpenMeshCraft__eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip
+# nested download in deps/OpenMeshCraft, sha256 29d0c510018d9bdaa5fbecaf95c2eaa616027d568e4a631d363b27620de4e07b
+Source110:      https://github.com/greg7mdp/parallel-hashmap/archive/154c63489e84d5569d3b466342a2ae8fd99e4734.zip#/nested__OpenMeshCraft__154c63489e84d5569d3b466342a2ae8fd99e4734.zip
+# nested download in deps/OpenMeshCraft, sha256 fe22388fb9435dcefa66c8189d4a8fbd8d968fda3a3dc4f578f78a3dd201c68e
+Source111:      https://github.com/oneapi-src/oneTBB/archive/d75ea937f7e480bd7775d7dab224e0b38451bb40.zip#/nested__OpenMeshCraft__d75ea937f7e480bd7775d7dab224e0b38451bb40.zip
+# nested download in deps/OpenMeshCraft, sha256 d368f9c39a33a3aef800f5be372ec1df1c12ad57ada1f60adc62f24c0e348469
+Source112:      https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip#/nested__OpenMeshCraft__10.2.1.zip
 # URL@@file map for the prep section: nested downloads are rewritten to file:// Sources
-%global nested_fetches %{nil}
+%global nested_fetches https://gitlab.com/libeigen/eigen/-/archive/68f4e58cfacc686583d16cff90361f0b43bc2c1b/eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip@@nested__OpenMeshCraft__eigen-68f4e58cfacc686583d16cff90361f0b43bc2c1b.zip https://github.com/greg7mdp/parallel-hashmap/archive/154c63489e84d5569d3b466342a2ae8fd99e4734.zip@@nested__OpenMeshCraft__154c63489e84d5569d3b466342a2ae8fd99e4734.zip https://github.com/oneapi-src/oneTBB/archive/d75ea937f7e480bd7775d7dab224e0b38451bb40.zip@@nested__OpenMeshCraft__d75ea937f7e480bd7775d7dab224e0b38451bb40.zip https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.zip@@nested__OpenMeshCraft__10.2.1.zip
 # END generated deps sources
 BuildRequires:  binutils
 BuildRequires:  cmake >= 3.13

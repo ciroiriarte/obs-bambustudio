@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Nov  5 23:47:41 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Bundle OpenMeshCraft (GPL-3.0-only), required since 2.9.1, with its
+  nested downloads (Eigen, parallel-hashmap, oneTBB, fmt) as Sources;
+  carried over from the beta channel
+
+-------------------------------------------------------------------
 Thu Nov  5 22:24:51 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Update to 2.9.1.70 (upstream v02.09.01.70, stable)
