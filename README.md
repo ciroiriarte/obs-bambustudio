@@ -68,6 +68,35 @@ Cloud/LAN printer control relies on Bambu Lab's proprietary network plugin.
 It is **not** part of this package; Bambu Studio offers to download it on first
 use, as on any other platform.
 
+The plugin bundles its own OpenSSL, which finds CA certificates only through
+`SSL_CERT_FILE`. The package sets it at startup to the distribution's CA bundle
+unless you set it yourself; without it, cloud requests fail with curl error 60
+and no printers are listed.
+
+### Crashes
+
+Crashes are recorded by `systemd-coredump`. For readable backtraces (source
+file and line), install the matching debug packages first:
+
+```sh
+sudo zypper install bambustudio-debuginfo bambustudio-debugsource
+coredumpctl list bambu-studio          # find the crash's PID
+coredumpctl info <PID> | less          # first "Stack trace of thread" = the crashing thread
+coredumpctl gdb <PID>                  # full session: `bt`, `thread apply all bt`
+```
+
+Reading the crashing thread:
+
+- Only `libbambu_networking.so` / `libBambuSource.so` frames: Bambu Lab's
+  closed-source plugins. Report to [upstream](https://github.com/bambulab/BambuStudio/issues).
+- Main thread in `~GUI_App` / `wxEntryCleanup`: the crash happened while
+  closing. Seen with the plugin's camera tunnel still logging after shutdown;
+  nothing is lost.
+- `bambu-studio` frames on top: open an issue here with the stack trace.
+
+Bambu Studio's own logs in `~/.config/BambuStudio/log/` are encrypted and
+readable only by Bambu Lab.
+
 ## How the build works
 
 ### Dependency policy

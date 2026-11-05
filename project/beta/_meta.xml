@@ -4,6 +4,10 @@
 slicer by Bambu Lab, from upstream source. Public Beta (pre-release) builds; follows the newest upstream release of any kind. Not provided or endorsed by Bambu Lab.
 Source/automation: https://github.com/ciroiriarte/obs-bambustudio</description>
   <person userid="ciriarte" role="maintainer"/>
+  <!-- -debuginfo/-debugsource packages: symbols for coredumpctl/gdb backtraces -->
+  <debuginfo>
+    <enable/>
+  </debuginfo>
 
   <!-- Phase 1: openSUSE Slowroll only (x86_64; OBS publishes no other
        Slowroll arch). Further targets (Tumbleweed, Leap 16.0, Rocky,
