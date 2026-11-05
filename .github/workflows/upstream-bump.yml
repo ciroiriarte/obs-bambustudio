@@ -58,6 +58,12 @@ jobs:
       - name: Install configure-time requirements
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libgl-dev libglx-dev libopengl-dev
 
+      # tools/vendor_web.py runs pnpm (from its npm tarball) with node to build
+      # the device_page store; same major as the spec's BuildRequires floor.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Bump channels
         id: bump
         env:
