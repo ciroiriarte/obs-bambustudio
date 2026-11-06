@@ -19,8 +19,8 @@
 
 # Scope
 ## Distributions
-* Primary: openSUSE Slowroll (x86_64 only on OBS).
-* Later, once Slowroll is green: openSUSE Tumbleweed/Leap 16.0, Rocky Linux 9/10,
+* Primary: openSUSE Slowroll (x86_64 only on OBS); Tumbleweed and Leap 16.0 added (x86_64).
+* Later: Rocky Linux 9/10,
   Ubuntu LTS, Debian stable. Debian/Ubuntu need `debian.*` recipe files.
 
 ## Packages

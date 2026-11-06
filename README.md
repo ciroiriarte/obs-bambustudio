@@ -29,11 +29,13 @@ repository, not both.
 | Distro | `REPO` token | Arch | Status |
 |--------|--------------|------|--------|
 | openSUSE Slowroll | `openSUSE_Slowroll` | x86_64 | building (stable and beta) |
-| openSUSE Tumbleweed / Leap 16.0 | — | — | planned |
+| openSUSE Tumbleweed | `openSUSE_Tumbleweed` | x86_64 | first builds in progress |
+| openSUSE Leap 16.0 | `openSUSE_Leap_16.0` | x86_64 | first builds in progress |
 | Rocky Linux 9 / 10 | — | — | planned |
 | Ubuntu 24.04 / Debian 13 | — | — | planned (needs `debian.*` recipe) |
 
-OBS publishes Slowroll for x86_64 only.
+OBS publishes Slowroll for x86_64 only; Tumbleweed and Leap 16.0 are built
+for x86_64 for now.
 
 ## Install
 
@@ -41,7 +43,7 @@ OBS publishes Slowroll for x86_64 only.
 
 ```sh
 CHANNEL=stable              # or: beta
-REPO=openSUSE_Slowroll
+REPO=openSUSE_Slowroll      # or: openSUSE_Tumbleweed, openSUSE_Leap_16.0
 BASE="https://download.opensuse.org/repositories/home:/ciriarte:/bambustudio:/$CHANNEL/$REPO"
 sudo zypper addrepo -f "$BASE/home:ciriarte:bambustudio:$CHANNEL.repo"
 sudo zypper --gpg-auto-import-keys refresh
