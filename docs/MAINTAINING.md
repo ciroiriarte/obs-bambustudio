@@ -81,7 +81,7 @@ an upstream change surfaces as a clear `%prep` error on the next bump.
 | `%prep` | `<hpdf/...>` includes → `<...>` | system libharu installs `hpdf*.h` flat in `/usr/include` |
 | `%prep` | `cereal` INTERFACE target → `cereal::cereal` | system cereal exports only the namespaced target; the bare name became `-lcereal` |
 | `%prep` | `opencv_world` → `${OpenCV_LIBS}` (core, imgproc, imgcodecs) | distro OpenCV is per-module, not the monolithic world library |
-| `%prep` | `glewInit()` → `glewContextInit()` | distro GLEW is GLX-only; `glewInit()` fails on EGL contexts (`GLEW_ERROR_NO_GLX_DISPLAY`) |
+| `%prep` | `glewInit()` → `glewContextInit()` (GLEW ≥ 2.3); with older GLEW (Leap 16.0), `glewInit()` with `GLEW_ERROR_NO_GLX_DISPLAY` accepted | distro GLEW is GLX-only; `glewInit()` fails on EGL contexts. GLEW < 2.3 keeps `glewContextInit()` internal, but its `glewInit()` loads the GL functions before failing the GLX check |
 | `%prep` | CLI thumbnails: OpenGL 3.3 on the native context API | upstream passes GLFW's library version as the GL version ("3.5" with GLFW 3.5) and forces OSMesa |
 | `%prep` | `main()` defaults `SSL_CERT_FILE` to the distro CA bundle | the closed network plugin bundles its own OpenSSL with no valid CA path here; upstream's static builds set the variable, ours link the system OpenSSL (without it: curl error 60, no printers) |
 | `%prep` | drop the `OSMesa` link | never called directly (GLFW dlopens it); current Mesa no longer ships libOSMesa |
