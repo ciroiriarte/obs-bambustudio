@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Nov  6 02:24:57 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Build with GLEW < 2.3 (openSUSE Leap 16.0), where glewContextInit()
+  is internal: use glewInit() and accept GLEW_ERROR_NO_GLX_DISPLAY,
+  which it returns only after loading the GL entry points
+
+-------------------------------------------------------------------
 Thu Nov  5 23:47:41 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Bundle OpenMeshCraft (GPL-3.0-only), required since 2.9.1, with its

@@ -3,7 +3,7 @@
 #
 # Community/unofficial build of Bambu Studio from upstream source.
 #
-# Dependency policy (see README "How the build works"):
+# Dependency policy (see docs/MAINTAINING.md):
 #   * Libraries come from the target distribution wherever it ships a version
 #     BambuStudio builds against.
 #   * The rest (%%{deps_targets}: the bambulab wxWidgets fork, Boost, TBB, OCCT,
@@ -216,13 +216,19 @@ fi
 #   GTK3); the distro GLEW is GLX-only, so glewInit() fails on EGL contexts
 #   with GLEW_ERROR_NO_GLX_DISPLAY. glewContextInit() loads core GL and the
 #   extensions without the window-system check (no GLX/EGL GLEW API is used).
+#   GLEW < 2.3 (Leap 16.0) keeps glewContextInit() internal; its glewInit()
+#   runs it first and only then fails the GLX check, so accept that one error.
 # - The CLI thumbnail renderer requests an OpenGL context whose version is
 #   GLFW's own library version (3.3 when bundled, "3.5" with system GLFW 3.5:
 #   invalid) and forces OSMesa, which current Mesa no longer ships. Request
 #   OpenGL 3.3 compatibility on the native context API instead.
 files=$(grep -rl 'glewInit()' src)
 test -n "$files"
-sed -i 's/\bglewInit()/glewContextInit()/' $files
+if grep -q 'GLEWAPIENTRY glewContextInit' %{_includedir}/GL/glew.h; then
+    sed -i 's/\bglewInit()/glewContextInit()/' $files
+else
+    sed -i 's/\bglewInit()/[]{ GLenum e = glewInit (); return e == GLEW_ERROR_NO_GLX_DISPLAY ? GLenum(GLEW_OK) : e; }()/' $files
+fi
 sed -i -e 's/glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gl_major);/glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);/' \
        -e 's/glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_minor);/glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);/' \
        -e '/glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_OSMESA_CONTEXT_API);/d' src/BambuStudio.cpp
