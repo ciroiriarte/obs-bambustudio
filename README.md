@@ -39,8 +39,8 @@ or `_beta`), add the other one, and run `sudo zypper dup --from <new repo alias>
 | Distribution | `REPO` | Status |
 |--------------|--------|--------|
 | openSUSE Slowroll | `openSUSE_Slowroll` | available |
-| openSUSE Tumbleweed | `openSUSE_Tumbleweed` | first builds in progress |
-| openSUSE Leap 16.0 | `openSUSE_Leap_16.0` | first builds in progress |
+| openSUSE Tumbleweed | `openSUSE_Tumbleweed` | available |
+| openSUSE Leap 16.0 | `openSUSE_Leap_16.0` | available |
 | Rocky Linux 9/10, Ubuntu 24.04, Debian 13 | — | planned |
 
 x86_64 only.
