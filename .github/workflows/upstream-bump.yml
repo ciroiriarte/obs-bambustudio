@@ -14,7 +14,7 @@
 #
 # Required setting (repo -> Settings -> Secrets and variables -> Actions):
 #   secret OBS_SERVICE_TOKEN  runservice token created without a package
-#                             binding (see README); valid for both channels
+#                             binding (see docs/MAINTAINING.md); valid for both channels
 name: upstream bump
 
 on:

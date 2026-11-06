@@ -43,7 +43,8 @@
   image libraries etc. come from the distribution.
 * Bundled libraries must stay private: %check fails if bambu-studio links or
   exports them (link uses -Wl,--exclude-libs,ALL).
-* Keep README.md current with anything a user or maintainer needs.
+* Keep README.md (users: install, troubleshooting) and docs/MAINTAINING.md
+  (build internals, maintainer workflow) current.
 
 # Reference Documentation
 * OBS: https://openbuildservice.org/help/manuals/obs-user-guide/cha-obs-osc
