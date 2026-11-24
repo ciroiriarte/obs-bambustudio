@@ -17,7 +17,7 @@
 #
 
 # Upstream tags are zero-padded (v02.08.02.61); RPM Version drops the padding.
-%global upstream_ver   02.09.01.70
+%global upstream_ver   02.09.02.62
 # bambulab/wxWidgets is consumed upstream as "GIT_TAG master"; pin the fork
 # commit that was current when v%%{upstream_ver} was released.
 %global wx_commit      abb542694ef4534a50e65c5b877b2774d02952ae
@@ -36,7 +36,7 @@
 %global _lto_cflags    %{nil}
 
 Name:           bambustudio
-Version:        2.9.1.70
+Version:        2.9.2.62
 Release:        0
 Summary:        Slicer for Bambu Lab and other FDM 3D printers
 # Bundled, statically linked: wxWidgets fork (wxWindows), Boost (BSL-1.0),

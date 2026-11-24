@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Nov 24 16:14:50 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Update to 2.9.2.62 (upstream v02.09.02.62, stable)
+  * Release notes: https://github.com/bambulab/BambuStudio/releases/tag/v02.09.02.62
+  * Regenerate bundled dependency sources from upstream deps/
+  * Pin bambulab/wxWidgets at abb542694ef4
+
+-------------------------------------------------------------------
 Fri Nov  6 02:24:57 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Build with GLEW < 2.3 (openSUSE Leap 16.0), where glewContextInit()
